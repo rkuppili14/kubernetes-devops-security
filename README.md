@@ -2,7 +2,7 @@
 
 ## Fork and Clone this Repo
 
-## Clone to Desktop and VM
+## Clone to Desktop and VM machine
 
 ## NodeJS Microservice - Docker Image -
 `docker run -p 8787:5000 siddharth67/node-service:v1`
