@@ -1,6 +1,15 @@
 pipeline {
   agent any
-
+  
+  environment {
+    deploymentName = "devsecops"
+    containerName = "devsecops-container"
+    serviceName = "devsecops-svc"
+    imageName = "siddharth67/numeric-app:${GIT_COMMIT}"
+    applicationURL = "http://devsecops-demo.eastus.cloudapp.azure.com"
+    applicationURI = "/increment/99"
+  }
+  
   stages {
 
     stage('Build Artifact - Maven') {
@@ -59,6 +68,23 @@ pipeline {
         withKubeConfig([credentialsId: 'kubeconfig']) {
           sh "sed -i 's#replace#rkuppili14/numeric-app:${GIT_COMMIT}#g' k8s_deployment_service.yaml"
           sh "kubectl apply -f k8s_deployment_service.yaml"
+        }
+      }
+    }
+	
+	stage('Integration Tests - DEV') {
+      steps {
+        script {
+          try {
+            withKubeConfig([credentialsId: 'kubeconfig']) {
+              sh "bash integration-test.sh"
+            }
+          } catch (e) {
+            withKubeConfig([credentialsId: 'kubeconfig']) {
+              sh "kubectl -n default rollout undo deploy ${deploymentName}"
+            }
+            throw e
+          }
         }
       }
     }
